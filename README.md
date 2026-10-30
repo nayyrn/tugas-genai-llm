@@ -169,7 +169,7 @@ Berikan hasil dalam format JSON.
 
 Pada Prompt A, AI sebenarnya bisa memahami isi instruksi, tetapi hasilnya masih terlalu bebas.
 
-AI membuat struktur output sendiri seperti `task_description`, `requirements`, `feasibility_assessment`, dan `recommendations`.
+AI membuat struktur output sendiri seperti task, topic, requirements, deadline, feasibility, dan notes.
 
 Hasilnya juga masih dibungkus dengan format markdown sehingga aplikasi belum bisa membacanya sebagai JSON murni.
 
@@ -177,7 +177,8 @@ Pada response aplikasi terlihat:
 
 {
   "prompt_version": "A",
-  "is_valid_json": false
+  "is_valid_json": false,
+  "output": "```json\n{\n  \"task\": \"Create a report\",\n  \"topic\": \"Use of Generative AI in Education\",\n  \"requirements\": {\n    \"minimum_pages\": 5,\n    \"minimum_references\": 3,\n    \"reference_type\": \"scholarly or reputable sources\",\n    \"output_format\": \"PDF\",\n    \"language\": \"Indonesian\"\n  },\n  \"deadline\": \"2026-11-10\",\n  \"feasibility\": {\n    \"content_creation\": true,\n    \"pdf_generation_by AI\": false,\n    \"recommended_steps\": [\n      \"Research and gather at least three reputable sources on Generative AI in education.\",\n      \"Draft the report with clear sections (e.g., introduction, benefits, challenges, case studies, future outlook, conclusion, references).\",\n      \"Ensure the draft spans at least five pages when formatted in a standard word processor (e.g., A4, 12‑pt Times New Roman, 1.5 line spacing).\",\n      \"Convert the final document to PDF using a word processor’s export function or an online converter.\"\n    ]\n  },\n  \"notes\": \"As a text‑based AI, I can provide the full report content in plain text/Markdown, which you can then copy into a document editor and export as PDF.\"\n}\n```"
 }
 
 Beberapa isi yang muncul dari output A antara lain:
@@ -216,7 +217,8 @@ Tetapi hasilnya masih belum menjadi JSON murni sehingga aplikasi masih membaca:
 
 {
   "prompt_version": "B",
-  "is_valid_json": false
+  "is_valid_json": false,
+  "output": "```json\n{\n  \"task_summary\": \"Menyusun laporan tentang penggunaan Generative AI dalam pendidikan.\",\n  \"requirements\": {\n    \"panjang_laporan\": \"Minimal 5 halaman\",\n    \"sumber_referensi\": \"Minimal 3 sumber referensi yang relevan\",\n    \"format_file\": \"PDF\"\n  },\n  \"deliverables\": [\n    \"Laporan lengkap dalam format PDF\"\n  ],\n  \"deadline\": \"2026-11-10\",\n  \"checklist\": [\n    \"1. Tentukan fokus utama laporan (misalnya: aplikasi, manfaat, tantangan, atau studi kasus Generative AI di pendidikan).\",\n    \"2. Kumpulkan minimal 3 sumber referensi yang kredibel (jurnal, buku, konferensi, atau laporan industri).\",\n    \"3. Buat outline laporan: pendahuluan, tinjauan literatur, pembahasan, kesimpulan, dan daftar pustaka.\",\n    \"4. Tulis draft pertama sesuai outline, pastikan tiap bagian terstruktur dengan jelas.\",\n    \"5. Sisipkan kutipan dan referensi sesuai dengan gaya penulisan yang ditentukan (misalnya APA, MLA, atau Chicago).\",\n    \"6. Review dan revisi draft untuk memperbaiki alur, kejelasan, dan konsistensi format.\",\n    \"7. Pastikan total halaman mencapai minimal 5 (termasuk halaman judul, abstrak, daftar pustaka, dan lampiran bila ada).\",\n    \"8. Convert dokumen akhir ke format PDF.\",\n    \"9. Periksa kembali PDF untuk memastikan tidak ada kesalahan tampilan atau kehilangan konten.\",\n    \"10. Submit laporan PDF sebelum atau pada tanggal 10 November 2026.\"\n  ]\n}\n```"
 }
 
 Selain itu AI masih menambahkan beberapa langkah yang sebenarnya tidak disebutkan langsung pada instruksi, seperti:
@@ -249,12 +251,17 @@ User biasanya menerima instruksi tugas yang panjang dan ingin mengetahui inti tu
 
 **Constraint:**
 
-- Requirements, deliverables, dan deadline harus berasal dari instruksi user.
+- Gunakan hanya informasi yang terdapat pada instruksi user untuk menentukan requirements, deliverables, dan deadline.
 - Jangan membuat requirement atau deadline yang tidak disebutkan.
 - Jangan melewatkan requirement penting.
+- Checklist harus memuat poin penting dari instruksi user.
+- Checklist boleh menambahkan langkah pengecekan umum yang membantu user sebelum mengumpulkan tugas, seperti mengecek kelengkapan atau format file.
+- Tambahan checklist tidak boleh dianggap sebagai requirement wajib jika tidak disebutkan dalam instruksi user.
+- Jangan membuat checklist yang bertentangan dengan instruksi user.
 - Jika deadline tidak disebutkan, isi dengan "Tidak disebutkan".
 - Jawaban harus berupa JSON valid.
 - Jangan menambahkan teks apa pun di luar JSON.
+- Checklist boleh menambahkan langkah pengecekan umum, tetapi tidak boleh membuat detail spesifik baru seperti nama file, format penamaan, jumlah, tanggal, atau aturan lain yang tidak disebutkan user.
 
 **Output Format:**
 
@@ -273,20 +280,23 @@ Hasil yang saya dapatkan:
 {
   "prompt_version": "C",
   "is_valid_json": true,
-  "output": {
-    "task_summary": "Buat laporan tentang penggunaan Generative AI dalam pendidikan.",
+   "output": {
+    "task_summary": "Menyusun laporan tentang penggunaan Generative AI dalam pendidikan.",
     "requirements": [
-      "Laporan minimal 5 halaman",
-      "Menggunakan minimal 3 sumber referensi"
+      "Laporan harus memiliki minimal 5 halaman",
+      "Menggunakan minimal 3 sumber referensi",
+      "Dikumpulkan dalam bentuk file PDF"
     ],
     "deliverables": [
-      "Laporan dalam bentuk PDF"
+      "File PDF berisi laporan lengkap"
     ],
     "deadline": "10 November 2026",
     "checklist": [
-      "Memastikan laporan memiliki minimal 5 halaman",
-      "Memastikan laporan mencantumkan minimal 3 sumber referensi",
-      "Mengonversi dan menyimpan laporan dalam format PDF"
+      "Pastikan laporan memiliki setidaknya 5 halaman",
+      "Pastikan terdapat minimal 3 sumber referensi yang tercantum dengan benar",
+      "Konversi dokumen ke format PDF",
+      "Periksa apakah file PDF dapat dibuka tanpa error",
+      "Pastikan semua bagian laporan (judul, isi, referensi) lengkap"
     ]
   }
 }
